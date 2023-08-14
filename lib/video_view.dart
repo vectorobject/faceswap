@@ -31,6 +31,7 @@ class _VideoViewState extends State<VideoView> {
     } else {
       _controller = widget.controller!;
     }
+    _controller.enabledButtons = const EnabledButtons(videoFit: false);
     var prefs = await SharedPreferences.getInstance();
     if (!prefs.containsKey('fit')) {
       _controller.videoFit.value = BoxFit.contain;
@@ -55,14 +56,14 @@ class _VideoViewState extends State<VideoView> {
   @override
   Widget build(BuildContext context) {
     _setDataSource(widget.url);
-
     Widget child = MeeduVideoPlayer(
       controller: _controller,
     );
     child = TextButtonTheme(
       data: const TextButtonThemeData(
           style: ButtonStyle(
-              backgroundColor: MaterialStatePropertyAll(Colors.transparent))),
+              backgroundColor: MaterialStatePropertyAll(Colors.transparent),
+              padding: MaterialStatePropertyAll(EdgeInsets.zero))),
       child: child,
     );
     return child;

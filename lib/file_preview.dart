@@ -12,14 +12,14 @@ import 'video_view.dart';
 class FilePreview extends StatefulWidget {
   final ValueNotifier<File?>? fileNotifier;
   final File? file;
-  final List<Widget>? imgOverlays;
+  final Widget Function(File imgFile)? imgBuilder;
   final MeeduPlayerController? videoController;
   final GifController? gifController;
   const FilePreview({
     super.key,
     this.file,
     this.fileNotifier,
-    this.imgOverlays,
+    this.imgBuilder,
     this.videoController,
     this.gifController,
   }) : assert(file != null && fileNotifier == null || file == null);
@@ -45,12 +45,6 @@ class _FilePreviewState extends State<FilePreview> {
             }
             if (widget.gifController!.status == GifStatus.playing) {
               widget.gifController!.pause();
-              /*if (widget.gifController!.currentIndex >=
-                  widget.gifController!.countFrames - 1) {
-                print(0);
-              } else {
-                print(widget.gifController!.currentIndex + 1);
-              }*/
             } else {
               widget.gifController!
                   .play(initialFrame: widget.gifController!.currentIndex);
@@ -85,8 +79,8 @@ class _FilePreviewState extends State<FilePreview> {
       return const SizedBox();
     }
 
+    Widget child;
     if (value.isImgOrGif) {
-      Widget child;
       if (widget.gifController != null && value.isGif) {
         child = Stack(
           alignment: Alignment.center,
@@ -111,66 +105,19 @@ class _FilePreviewState extends State<FilePreview> {
           ],
         );
       } else {
-        child = Image.file(value);
+        if (widget.imgBuilder != null) {
+          child = widget.imgBuilder!(value);
+        } else {
+          child = Image.file(value);
+        }
       }
-      if (widget.imgOverlays != null) {
-        child = FittedBox(
-          child: Stack(
-            children: [SizedHolder(child: child), ...widget.imgOverlays!],
-          ),
-        );
-      }
-      return child;
+    } else {
+      child = VideoView(
+        controller: widget.videoController,
+        file: value,
+      );
     }
-    return VideoView(
-      controller: widget.videoController,
-      file: value,
-    );
-  }
-}
-
-class SizedHolder extends StatefulWidget {
-  final Widget child;
-  const SizedHolder({super.key, required this.child});
-
-  @override
-  State<SizedHolder> createState() => _SizedHolderState();
-}
-
-class _SizedHolderState extends State<SizedHolder> {
-  double? _width;
-  double? _height;
-  Widget? _curChild;
-  @override
-  Widget build(BuildContext context) {
-    if (_curChild != widget.child) {
-      _curChild = widget.child;
-      _width = null;
-      _height = null;
-    }
-    if (_width == null) {
-      return SizedOverflowBox(
-          size: const Size(10, 10),
-          child: MeasureSize(
-              child: widget.child,
-              onChange: (size) {
-                if (size == null) {
-                  return;
-                }
-                if (size.width <= 0 || size.height <= 0) {
-                  return;
-                }
-                setState(() {
-                  _width = size.width;
-                  _height = size.height;
-                });
-              }));
-    }
-    return SizedBox(
-      width: _width,
-      height: _height,
-      child: widget.child,
-    );
+    return child;
   }
 }
 
@@ -181,23 +128,28 @@ class BackgroundPainter extends CustomPainter {
     double eHeight = 20;
     int xCount = (size.width / eWidth).ceil();
     int yCount = (size.height / eHeight).ceil();
-
     var paint = Paint()
       ..isAntiAlias = true
       ..style = PaintingStyle.fill
       ..color = Colors.white;
     canvas.drawRect(Offset.zero & size, paint);
 
-    paint
-      ..style = PaintingStyle.fill
-      ..color = const Color(0xffcccccc);
+    paint.color = const Color(0xffcccccc);
 
-    for (int i = 0; i <= xCount; ++i) {
-      for (int j = 0; j <= yCount; ++j) {
+    for (int i = 0; i < xCount; ++i) {
+      for (int j = 0; j < yCount; ++j) {
         if (i % 2 == 0 && j % 2 == 0 || i % 2 != 0 && j % 2 != 0) {
           double dx = eWidth * i;
           double dy = eHeight * j;
-          canvas.drawRect(Rect.fromLTWH(dx, dy, eWidth, eHeight), paint);
+          double dx2 = dx + eWidth;
+          double dy2 = dy + eHeight;
+          if (dx2 > size.width) {
+            dx2 = size.width;
+          }
+          if (dy2 > size.height) {
+            dy2 = size.height;
+          }
+          canvas.drawRect(Rect.fromLTRB(dx, dy, dx2, dy2), paint);
         }
       }
     }

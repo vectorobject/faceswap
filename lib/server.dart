@@ -215,10 +215,13 @@ class Server {
         'swap_video(${_py(sourceFaceInfos)},${_py(targetFaceInfos)},${_py(targetPath)},${_py(outputPath)},${_py(keepFPS)},${_py(minSimilarity)})');
   }
 
-  static Future<void> swapImage(List<dynamic> sourceFaceInfos,
-      List<int> targetFaceIndexs, String targetPath, String outputPath) async {
+  static Future<void> swapImage(
+      List<dynamic> sourceFaceInfos,
+      List<dynamic> targetFaceInfos,
+      String targetPath,
+      String outputPath) async {
     await _callFunc(
-        'swap_image(${_py(sourceFaceInfos)},${_py(targetFaceIndexs)},${_py(targetPath)},${_py(outputPath)})');
+        'swap_image(${_py(sourceFaceInfos)},${_py(targetFaceInfos)},${_py(targetPath)},${_py(outputPath)})');
   }
 
   static Future<dynamic> getFaces(String path) async {

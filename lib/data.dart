@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class SourceFaceLib {
@@ -28,6 +29,7 @@ class SourceFaceLib {
 class SwapData {
   ValueNotifier<List<RectData>> source = ValueNotifier([]);
   ValueNotifier<List<RectData>> target = ValueNotifier([]);
+  int idCount = 0;
 
   bool hasSource(RectData face) {
     if (source.value.contains(face)) {
@@ -54,12 +56,17 @@ class SwapData {
   }
 
   void addSource(RectData face) {
+    if (source.value.contains(face)) {
+      face = face.copy();
+    }
+    face.id = idCount++;
     source.value.add(face);
     source.notifyListeners();
   }
 
   void addTarget(RectData face) {
     if (!hasTarget(face)) {
+      face.id = idCount++;
       target.value.add(face);
       target.notifyListeners();
     }
@@ -93,6 +100,8 @@ class FrameData {
   File file;
   String? framePosition;
   File? frameFile;
+  int? width;
+  int? height;
 
   get fileForShow => frameFile ?? file;
 
@@ -101,20 +110,19 @@ class FrameData {
 
   FrameData(this.file);
 
-  addRect(RectData rect) {
+  _addRect(RectData rect) {
     rect.parent = this;
     _rects.add(rect);
   }
 
   FrameData fromServerData(dynamic serverData) {
-    if (serverData.length > 0) {
+    if (serverData != null) {
+      width = serverData["width"];
+      height = serverData["height"];
+      var faces = serverData["faces"];
       _rects.clear();
-      for (var i = 0; i < serverData.length; i++) {
-        addRect(RectData(Rect.fromLTRB(
-            serverData[i]["bbox"][0],
-            serverData[i]["bbox"][1],
-            serverData[i]["bbox"][2],
-            serverData[i]["bbox"][3])));
+      for (var face in faces) {
+        _addRect(RectData(Rect.fromLTRB(face[0], face[1], face[2], face[3])));
       }
     }
     return this;
@@ -122,9 +130,11 @@ class FrameData {
 }
 
 class RectData {
+  int? id;
   Rect rect;
   late FrameData parent;
   bool selected = false;
+  bool enhance = false;
 
   RectData(this.rect);
   int get index => parent.rects.indexOf(this);
@@ -133,5 +143,13 @@ class RectData {
     return parent.file.path == t.parent.file.path &&
         index == t.index &&
         parent.framePosition == t.parent.framePosition;
+  }
+
+  RectData copy() {
+    var t = RectData(rect);
+    t.parent = parent;
+    t.selected = selected;
+    t.enhance = enhance;
+    return t;
   }
 }

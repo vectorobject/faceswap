@@ -1,3 +1,5 @@
+print("starting...",flush=True)
+
 import sys
 import shutil
 import glob
@@ -16,13 +18,22 @@ import numpy as np
 from roop import utilities
 from tqdm import tqdm
 
+enhancer=None
+def face_enhance(target_face,frame_img):
+    global enhancer
+    if not enhancer:
+        from roop.processors.frame import face_enhancer
+        enhancer=face_enhancer
+        enhancer.pre_check()
+    return enhancer.enhance_face(target_face,frame_img)
+
 def extract_frames(input_path: str,output_dir:str, fps: float = 30) -> bool:
     temp_frame_quality = roop.globals.temp_frame_quality * 31 // 100
     utilities.run_ffmpeg(['-hwaccel', 'auto', '-i', input_path, '-q:v', str(temp_frame_quality), '-pix_fmt', 'rgb24', '-vf', 'fps=' + str(fps), os.path.join(output_dir, '%04d.' + roop.globals.temp_frame_format)])
 
 def create_gif(input_frames_dir,fps, output_path):
     input_frames_dir=os.path.join(input_frames_dir,"%04d.png")
-    utilities.run_ffmpeg(['-hwaccel', 'auto', '-f', 'image2', '-r', str(fps), '-i', input_frames_dir,output_path])
+    return utilities.run_ffmpeg(['-hwaccel', 'auto', '-f', 'image2', '-r', str(fps), '-i', input_frames_dir,output_path])
 
 def create_video(input_frames_dir, fps, output_path):
     output_dir = os.path.join(input_frames_dir, '%04d.' + roop.globals.temp_frame_format)
@@ -76,37 +87,45 @@ class JsonCustomEncoder(json.JSONEncoder):
             return field.tolist()
         elif isinstance(field, np.integer): 
             return field.tolist()
-        else: 
+        else:
             return json.JSONEncoder.default(self, field)
 
 def cv2imread(file_path):
-    cv_img=cv2.imdecode(np.fromfile(file_path,dtype=np.uint8),-1)
+    cv_img=cv2.imdecode(np.fromfile(file_path,dtype=np.uint8),cv2.IMREAD_COLOR)
     return cv_img
 
-def process_frames(source_faces,target_faces,frame_paths,output_dir, progress,min_similarity):
+def process_frames(source_face_infos,target_face_infos,frame_paths,output_dir, progress,min_similarity):
     for frame_path in frame_paths:
         frame = cv2imread(frame_path)
         try:
-            result = process_one_frame(source_faces,target_faces, frame,min_similarity)
+            result = process_one_frame(source_face_infos,target_face_infos, frame,min_similarity)
             cv2.imwrite(os.path.join(output_dir,os.path.split(frame_path)[-1]), result)
-        except Exception as exception:
-            print(exception)
+        except Exception:
+            print(f"process frame err:{traceback.format_exc()}")
             pass
         if progress:
             progress.update(1)
 
-def process_one_frame(source_faces,target_faces,frame,min_similarity):
+def process_one_frame(source_face_infos,target_face_infos,frame,min_similarity):
     frame_faces=roop.face_analyser.get_many_faces(cv2.cvtColor(frame,cv2.COLOR_RGB2BGR))
     result=frame
     if frame_faces is not None and len(frame_faces)>0:
-        ser=face_swapper.get_face_swapper()
-        for i in range(len(target_faces)):
-            face=get_most_similar_face(frame_faces,target_faces[i],min_similarity)
-            if face:
-                result = ser.get(result, face, source_faces[i], paste_back=True)
+        min_len=min(len(source_face_infos),len(target_face_infos))
+        if min_len>0:
+            ser=face_swapper.get_face_swapper()
+            for i in range(min_len):
+                face=get_most_similar_face(frame_faces,target_face_infos[i]["face"],min_similarity)
+                if face:
+                    result = ser.get(result, face, source_face_infos[i]["face"], paste_back=True)
+        if len(target_face_infos)>min_len:
+            for i in range(min_len,len(target_face_infos)):
+                info=target_face_infos[i]
+                if info["enhance"]==True:
+                    face=get_most_similar_face(frame_faces,info["face"],min_similarity)
+                    result=face_enhance(face,result)
     return result
 
-def multi_process_frame(source_faces,target_faces,frame_paths,output_dir, progress,min_similarity):
+def multi_process_frame(source_face_infos,target_face_infos,frame_paths,output_dir, progress,min_similarity):
     threads = []
     num_threads = roop.globals.execution_threads
     num_frames_per_thread = len(frame_paths) // num_threads
@@ -120,7 +139,7 @@ def multi_process_frame(source_faces,target_faces,frame_paths,output_dir, progre
             end_index += 1
             remaining_frames -= 1
         thread_frame_paths = frame_paths[start_index:end_index]
-        thread = threading.Thread(target=process_frames, args=(source_faces,target_faces,thread_frame_paths,output_dir, progress,min_similarity))
+        thread = threading.Thread(target=process_frames, args=(source_face_infos,target_face_infos,thread_frame_paths,output_dir, progress,min_similarity))
         threads.append(thread)
         thread.start()
         start_index = end_index
@@ -129,14 +148,14 @@ def multi_process_frame(source_faces,target_faces,frame_paths,output_dir, progre
     for thread in threads:
         thread.join()
     
-def process_video(source_faces,target_faces,frame_paths,output_dir,min_similarity):
+def process_video(source_face_infos,target_face_infos,frame_paths,output_dir,min_similarity):
     do_multi = roop.globals.execution_threads > 1
     progress_bar_format = '{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}{postfix}]'
     with tqdm(total=len(frame_paths), desc="Processing", unit="frame", dynamic_ncols=True, bar_format=progress_bar_format) as progress:
         if do_multi:
-            multi_process_frame(source_faces,target_faces,frame_paths,output_dir, progress,min_similarity)
+            multi_process_frame(source_face_infos,target_face_infos,frame_paths,output_dir, progress,min_similarity)
         else:
-            process_frames(source_faces,target_faces,frame_paths,output_dir, progress,min_similarity)
+            process_frames(source_face_infos,target_face_infos,frame_paths,output_dir, progress,min_similarity)
 
 class MyHTTPHandler(BaseHTTPRequestHandler):
     def do_POST(self):
@@ -166,8 +185,13 @@ class MyHTTPHandler(BaseHTTPRequestHandler):
         self.wfile.write(resultStr.encode('utf-8'))
     
     def func_get_faces(self,input_img_path):
-        t=roop.face_analyser.get_many_faces(cv2.cvtColor(cv2imread(input_img_path),cv2.COLOR_RGB2BGR))
-        return t
+        img=cv2imread(input_img_path)
+        t=roop.face_analyser.get_many_faces(cv2.cvtColor(img,cv2.COLOR_RGB2BGR))
+        faces=[]
+        if t is not None:
+            for item in t:
+                faces.append(item['bbox'])
+        return {'width':img.shape[1],'height':img.shape[0],'faces':faces}
     
     def func_swap_video(self,source_face_infos,target_face_infos,target_path,output_path,keep_fps,min_similarity):
         video_name_full = os.path.split(target_path)[-1]
@@ -188,7 +212,6 @@ class MyHTTPHandler(BaseHTTPRequestHandler):
         ))
         
         source_cache={}
-        source_faces=[]
         for i in range(len(source_face_infos)):
             info=source_face_infos[i]
             if info["file"] in source_cache:
@@ -197,9 +220,8 @@ class MyHTTPHandler(BaseHTTPRequestHandler):
                 source_img=cv2.cvtColor(cv2imread(info["file"]),cv2.COLOR_RGB2BGR)
                 source_img_faces=roop.face_analyser.get_many_faces(source_img)
                 source_cache[info["file"]]=source_img_faces
-            source_faces.append(source_img_faces[info["face"]])
+            info["face"]=source_img_faces[info["face_index"]]
         target_cache={}
-        target_faces=[]
         for i in range(len(target_face_infos)):
             info=target_face_infos[i]
             if info["file"] in target_cache:
@@ -208,21 +230,24 @@ class MyHTTPHandler(BaseHTTPRequestHandler):
                 target_img=cv2.cvtColor(cv2imread(info["file"]),cv2.COLOR_RGB2BGR)
                 target_img_faces=roop.face_analyser.get_many_faces(target_img)
                 target_cache[info["file"]]=target_img_faces
-            target_faces.append(target_img_faces[info["face"]])
+            info["face"]=target_img_faces[info["face_index"]]
         frames_temp_dir = os.path.join(os.path.dirname(temp_output_dir),video_name+"_swapped")
         if os.path.exists(frames_temp_dir):
             shutil.rmtree(frames_temp_dir)
         os.makedirs(frames_temp_dir,exist_ok=True)
-        process_video(source_faces,target_faces,frame_paths,frames_temp_dir,min_similarity)
+        process_video(source_face_infos,target_face_infos,frame_paths,frames_temp_dir,min_similarity)
         if video_name_full.endswith(".gif"):
             print("creating gif...")
-            create_gif(frames_temp_dir,fps,output_path)
+            if not create_gif(frames_temp_dir,fps,output_path):
+                return 'fail'
         else:
             print("creating video...")
             temp_output_path=os.path.join(frames_temp_dir,"tempvideo.mp4")
-            create_video(frames_temp_dir, fps, temp_output_path)
+            if not create_video(frames_temp_dir, fps, temp_output_path):
+                return 'fail'
             print("adding audio...")
-            add_audio(temp_output_path, target_path, output_path)
+            if not add_audio(temp_output_path, target_path, output_path):
+                print("add audio failed")
         return 'succ'
     
     def func_video_screenshot(self,duration,input_path,output_path):
@@ -230,24 +255,34 @@ class MyHTTPHandler(BaseHTTPRequestHandler):
             return 'succ'
         return 'fail'
 
-    def func_swap_image(self,source_face_infos,target_face_indexs,target_img_path,output_file):
+    def func_swap_image(self,source_face_infos,target_face_infos,target_img_path,output_file):
         source_cache={}
         target_img = cv2imread(target_img_path)
         all_target_faces=roop.face_analyser.get_many_faces(cv2.cvtColor(target_img,cv2.COLOR_RGB2BGR))
         result=target_img
         if all_target_faces is not None and len(all_target_faces)>0:
-            ser=face_swapper.get_face_swapper()
-            for i in range(len(source_face_infos)):
-                info=source_face_infos[i]
-                if info["file"] in source_cache:
-                    source_img_faces=source_cache[info["file"]]
-                else:
-                    source_img=cv2.cvtColor(cv2imread(info["file"]),cv2.COLOR_RGB2BGR)
-                    source_img_faces=roop.face_analyser.get_many_faces(source_img)
-                    source_cache[info["file"]]=source_img_faces
-                source_face=source_img_faces[info["face"]]
-                target_face=all_target_faces[target_face_indexs[i]]
-                result = ser.get(result, target_face, source_face, paste_back=True)
+            min_len=min(len(source_face_infos),len(target_face_infos))
+            if min_len>0:
+                ser=face_swapper.get_face_swapper()
+                for i in range(min_len):
+                    info=source_face_infos[i]
+                    if info["file"] in source_cache:
+                        source_img_faces=source_cache[info["file"]]
+                    else:
+                        source_img=cv2.cvtColor(cv2imread(info["file"]),cv2.COLOR_RGB2BGR)
+                        source_img_faces=roop.face_analyser.get_many_faces(source_img)
+                        source_cache[info["file"]]=source_img_faces
+                    source_face=source_img_faces[info["face_index"]]
+                    target_face=all_target_faces[target_face_infos[i]["face_index"]]
+                    result = ser.get(result, target_face, source_face, paste_back=True)
+                    if target_face_infos[i]["enhance"]==True:
+                        result=face_enhance(target_face,result)
+            if len(target_face_infos)>min_len:
+                for i in range(min_len,len(target_face_infos)):
+                    info=target_face_infos[i]
+                    if info["enhance"]==True:
+                        target_face=all_target_faces[info["face_index"]]
+                        result=face_enhance(target_face,result)
         cv2.imwrite(output_file, result)
         print("\n\nImage saved as:", output_file, "\n\n")
         return 'succ'
@@ -275,7 +310,7 @@ if __name__ == '__main__':
     else:
         port=53499
     roop.core.parse_args()
-    roop.globals.log_level='debug'
+    roop.globals.log_level='info'
     if not roop.core.pre_check():
         exit(1)
     if not face_swapper.pre_check():

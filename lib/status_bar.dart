@@ -1,7 +1,9 @@
+import 'package:faceswap/global.dart';
 import 'package:faceswap/server.dart';
 import 'package:flutter/material.dart';
 
 import 'generated/l10n.dart';
+import 'settings_view.dart';
 
 class OutputMsg {
   bool isErr;
@@ -24,73 +26,98 @@ class StatusBar extends StatefulWidget {
 }
 
 class _StatusBarState extends State<StatusBar> {
-  List<bool> isSelected = [false];
+  bool isLogViewShow = false;
+  late ThemeData theme;
   @override
   Widget build(BuildContext context) {
-    Widget child = Container(
+    theme = Theme.of(context);
+    Widget child = SizedBox(
       height: 30,
       child: Row(
         children: [
-          ToggleButtons(
-              fillColor: Colors.black.withOpacity(0.2),
-              selectedColor: Colors.white,
-              color: Colors.white,
-              selectedBorderColor: Colors.black.withOpacity(0.02),
-              borderColor: Colors.black.withOpacity(0.02),
-              onPressed: (int index) {
-                setState(() {
-                  isSelected[index] = !isSelected[index];
-                });
-              },
-              children: [
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 10),
-                  child: Row(
-                    children: [
-                      Icon(Icons.output),
-                      Text(S.of(context).log),
-                    ],
-                  ),
-                )
-              ],
-              isSelected: isSelected),
+          TextButton.icon(
+            onPressed: () {
+              setState(() {
+                isLogViewShow = !isLogViewShow;
+              });
+            },
+            icon: const Icon(
+              Icons.output,
+            ),
+            label: Text(
+              S.of(context).log,
+            ),
+          ),
+          TextButton.icon(
+            onPressed: () {
+              SettingsView.show(context);
+            },
+            icon: Icon(
+              Icons.settings,
+            ),
+            label: Text(
+              S.of(context).settings,
+            ),
+          ),
           ValueListenableBuilder(
             valueListenable: Server.waitingCount,
             builder: (context, value, child) {
               if (value == 0) {
-                return SizedBox();
+                return const SizedBox();
               }
               return Padding(
-                padding: EdgeInsets.symmetric(horizontal: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 10),
                 child: Row(
                   children: [
                     SizedBox(
                         width: 15,
                         height: 15,
                         child: CircularProgressIndicator(
+                          color: theme.colorScheme.onSurfaceVariant,
                           strokeWidth: 2,
-                          color: Colors.white,
                         )),
-                    SizedBox(
+                    const SizedBox(
                       width: 5,
                     ),
                     Text(
                       S.of(context).executing,
-                      style: TextStyle(color: Colors.white),
+                      style:
+                          TextStyle(color: theme.colorScheme.onSurfaceVariant),
                     ),
                   ],
                 ),
               );
             },
+          ),
+          const Spacer(),
+          ListenableBuilder(
+            listenable: Global.themeMode,
+            builder: (context, child) {
+              return IconButton(
+                  padding: EdgeInsets.zero,
+                  onPressed: () {
+                    Global.themeMode.value =
+                        Global.themeMode.value == ThemeMode.dark
+                            ? ThemeMode.light
+                            : ThemeMode.dark;
+                  },
+                  icon: Icon(
+                    Global.themeMode.value == ThemeMode.dark
+                        ? Icons.nightlight_rounded
+                        : Icons.wb_sunny_rounded,
+                    size: 23,
+                  ));
+            },
           )
         ],
       ),
     );
-    if (isSelected[0]) {
+    if (isLogViewShow) {
+      //log view
       child = Column(
         children: [
           Container(
-            padding: EdgeInsets.all(3),
+            padding: const EdgeInsets.all(3),
             height: 100,
             color: Colors.black,
             child: ValueListenableBuilder(
@@ -123,6 +150,19 @@ class _StatusBarState extends State<StatusBar> {
         ],
       );
     }
+    child = TextButtonTheme(
+      data: TextButtonThemeData(
+          style: theme.textButtonTheme.style?.copyWith(
+              foregroundColor: MaterialStatePropertyAll(
+                  theme.colorScheme.onSurfaceVariant))),
+      child: child,
+    );
+    child = IconButtonTheme(
+        data: IconButtonThemeData(
+            style: theme.iconButtonTheme.style?.copyWith(
+                foregroundColor: MaterialStatePropertyAll(
+                    theme.colorScheme.onSurfaceVariant))),
+        child: child);
     return child;
   }
 }

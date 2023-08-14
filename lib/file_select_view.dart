@@ -1,10 +1,11 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:faceswap/toolbar.dart';
 import 'package:faceswap/util.dart';
 import 'package:file_selector/file_selector.dart';
+import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
-import 'package:process_run/process_run.dart';
 import 'package:path/path.dart' as path;
 
 import 'generated/l10n.dart';
@@ -58,6 +59,7 @@ class FileSelectViewState extends State<FileSelectView> {
   late Directory dir;
   List<FileSystemEntity?> files = [];
   FileSystemEntity? tempSelectedFile;
+  late ThemeData theme;
 
   StreamSubscription<FileSystemEvent>? watchListener;
   StreamSubscription<FileSystemEntity>? listListener;
@@ -107,17 +109,14 @@ class FileSelectViewState extends State<FileSelectView> {
 
   @override
   Widget build(BuildContext context) {
+    theme = Theme.of(context);
     return ValueListenableBuilder(
       valueListenable: widget.selectedFile,
       builder: (BuildContext context, value, Widget? child) {
         Widget child = Column(
           children: [
-            Container(
-              alignment: Alignment.centerLeft,
-              padding: EdgeInsets.symmetric(horizontal: 10),
-              height: 25,
-              color: Colors.lightBlue,
-              child: Row(children: [
+            Toolbar(
+              children: [
                 Expanded(
                     child: Tooltip(
                   message: dir.path,
@@ -125,28 +124,21 @@ class FileSelectViewState extends State<FileSelectView> {
                     dir.path,
                     softWrap: false,
                     overflow: TextOverflow.fade,
-                    style: const TextStyle(color: Colors.white),
                   ),
                 )),
                 if (!widget.onlyImg)
                   IconButton(
                     tooltip: type.getDesc(context),
-                    padding: EdgeInsets.zero,
                     onPressed: () {
                       type = type.next;
                       refreshDir();
                     },
-                    icon: Icon(
-                      type.icon,
-                      size: 20,
-                    ),
+                    icon: Icon(type.icon),
                   ),
                 IconButton(
-                  padding: EdgeInsets.zero,
                   tooltip: S.of(context).add_folder,
                   icon: const Icon(
                     Icons.add_link,
-                    size: 20,
                   ),
                   onPressed: () async {
                     String? source = await getDirectoryPath();
@@ -166,10 +158,8 @@ class FileSelectViewState extends State<FileSelectView> {
                       }
                       i++;
                     }
-                    String cmd = 'mklink /D "$target" "$source"';
-                    debugPrint(cmd);
                     try {
-                      await Shell().run(cmd);
+                      await Process.start('mklink', ["/D", target, source]);
                       debugPrint("Finished");
                     } catch (err) {
                       debugPrint("Err:$err");
@@ -177,11 +167,9 @@ class FileSelectViewState extends State<FileSelectView> {
                   },
                 ),
                 IconButton(
-                  padding: EdgeInsets.zero,
                   tooltip: S.of(context).parent_folder,
                   icon: const Icon(
                     Icons.arrow_upward,
-                    size: 20,
                   ),
                   onPressed: !dir.parent.path.startsWith(widget.dir)
                       ? null
@@ -192,24 +180,18 @@ class FileSelectViewState extends State<FileSelectView> {
                         },
                 ),
                 IconButton(
-                  padding: EdgeInsets.zero,
-                  tooltip: S.of(context).show_in_file_explorer,
+                  tooltip: S.of(context).reveal_in_file_explorer,
                   icon: const Icon(
                     Icons.folder_open,
-                    size: 20,
                   ),
                   onPressed: () {
-                    try {
-                      Shell().run("start ${dir.path}");
-                    } catch (err) {}
+                    Util.revealInExplorer(dir, widget.selectedFile.value);
                   },
                 ),
                 IconButton(
-                  padding: EdgeInsets.zero,
                   tooltip: S.of(context).refresh,
                   icon: const Icon(
                     Icons.refresh,
-                    size: 20,
                   ),
                   onPressed: () {
                     setState(() {
@@ -217,15 +199,15 @@ class FileSelectViewState extends State<FileSelectView> {
                     });
                   },
                 ),
-              ]),
+              ],
             ),
             Expanded(
               child: Container(
-                  color: Colors.white,
+                  color: theme.colorScheme.background,
                   child: GridView.builder(
                     gridDelegate:
                         const SliverGridDelegateWithMaxCrossAxisExtent(
-                            maxCrossAxisExtent: 100),
+                            maxCrossAxisExtent: 126),
                     itemCount: files.length,
                     itemBuilder: (context, index) {
                       var f = files[index];
@@ -235,10 +217,10 @@ class FileSelectViewState extends State<FileSelectView> {
                       Widget child;
                       String fName;
                       if (f == null) {
-                        child = const Icon(
+                        child = Icon(
                           Icons.folder_outlined,
                           size: 60,
-                          color: Colors.orange,
+                          color: theme.colorScheme.secondary,
                         );
                         fName = S.of(context).parent_folder;
                       } else {
@@ -247,17 +229,17 @@ class FileSelectViewState extends State<FileSelectView> {
                           if (f.isImgOrGif) {
                             child = Image.file(f);
                           } else {
-                            child = const Icon(
+                            child = Icon(
                               Icons.video_file_outlined,
                               size: 60,
-                              color: Colors.lightBlue,
+                              color: theme.colorScheme.secondary,
                             );
                           }
                         } else {
-                          child = const Icon(
+                          child = Icon(
                             Icons.folder,
                             size: 60,
-                            color: Colors.orange,
+                            color: theme.colorScheme.secondary,
                           );
                           fName = f.uri.pathSegments
                               .elementAt(f.uri.pathSegments.length - 2);
@@ -278,15 +260,18 @@ class FileSelectViewState extends State<FileSelectView> {
                             width: 100,
                             height: 100,
                             decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
                               border: Border.all(
-                                  color: isSelected
-                                      ? Colors.blue
-                                      : Colors.transparent),
+                                color: isSelected
+                                    ? theme.colorScheme.primary
+                                    : Colors.transparent,
+                              ),
                               color: isTempSelected
-                                  ? Colors.lightBlue.withOpacity(0.2)
+                                  ? theme.colorScheme.secondaryContainer
                                   : Colors.transparent,
                             ),
                             padding: const EdgeInsets.all(5),
+                            margin: const EdgeInsets.all(2),
                             child: Column(
                               children: [
                                 Expanded(
@@ -295,6 +280,8 @@ class FileSelectViewState extends State<FileSelectView> {
                                 Text(
                                   fName,
                                   overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                      color: theme.colorScheme.onBackground),
                                 )
                               ],
                             ),
@@ -317,15 +304,6 @@ class FileSelectViewState extends State<FileSelectView> {
                   )),
             )
           ],
-        );
-        child = Theme(
-          data: ThemeData(
-              iconTheme: const IconThemeData(color: Colors.white),
-              textButtonTheme: const TextButtonThemeData(
-                  style: ButtonStyle(
-                      backgroundColor:
-                          MaterialStatePropertyAll(Colors.white)))),
-          child: child,
         );
         return child;
       },

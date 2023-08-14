@@ -27,10 +27,13 @@ class MessageLookup extends MessageLookupByLibrary {
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
         "add_folder": MessageLookupByLibrary.simpleMessage("Add Folder"),
+        "close": MessageLookupByLibrary.simpleMessage("Close"),
         "connection_failed_and_restart": MessageLookupByLibrary.simpleMessage(
             "Connection failed, restarting server"),
+        "delete": MessageLookupByLibrary.simpleMessage("Delete"),
         "detect_faces": MessageLookupByLibrary.simpleMessage("Detect Faces"),
         "executing": MessageLookupByLibrary.simpleMessage("Executing"),
+        "face_enhance": MessageLookupByLibrary.simpleMessage("Enhance"),
         "file_filter_type_all": MessageLookupByLibrary.simpleMessage("All"),
         "file_filter_type_gif_video":
             MessageLookupByLibrary.simpleMessage("GIF and Video"),
@@ -38,11 +41,14 @@ class MessageLookup extends MessageLookupByLibrary {
         "generate": MessageLookupByLibrary.simpleMessage("Generate"),
         "generating": MessageLookupByLibrary.simpleMessage("Generating"),
         "log": MessageLookupByLibrary.simpleMessage("Log"),
-        "open_folder": MessageLookupByLibrary.simpleMessage("Open Folder"),
         "parent_folder": MessageLookupByLibrary.simpleMessage("Parent Folder"),
         "refresh": MessageLookupByLibrary.simpleMessage("Refresh"),
-        "show_in_file_explorer":
+        "result": MessageLookupByLibrary.simpleMessage("Result"),
+        "reveal_in_file_explorer":
             MessageLookupByLibrary.simpleMessage("Show in File Explorer"),
+        "settings": MessageLookupByLibrary.simpleMessage("Settings"),
+        "source": MessageLookupByLibrary.simpleMessage("Source"),
+        "target": MessageLookupByLibrary.simpleMessage("Target"),
         "try_to_read_service_port_from_file": m0,
         "using_port_read_from_file": m1,
         "video": MessageLookupByLibrary.simpleMessage("Video")

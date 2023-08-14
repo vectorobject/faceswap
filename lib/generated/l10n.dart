@@ -101,10 +101,10 @@ class S {
   }
 
   /// `Show in File Explorer`
-  String get show_in_file_explorer {
+  String get reveal_in_file_explorer {
     return Intl.message(
       'Show in File Explorer',
-      name: 'show_in_file_explorer',
+      name: 'reveal_in_file_explorer',
       desc: '',
       args: [],
     );
@@ -135,16 +135,6 @@ class S {
     return Intl.message(
       'Video',
       name: 'video',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Open Folder`
-  String get open_folder {
-    return Intl.message(
-      'Open Folder',
-      name: 'open_folder',
       desc: '',
       args: [],
     );
@@ -215,6 +205,76 @@ class S {
     return Intl.message(
       'Generate',
       name: 'generate',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Settings`
+  String get settings {
+    return Intl.message(
+      'Settings',
+      name: 'settings',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Enhance`
+  String get face_enhance {
+    return Intl.message(
+      'Enhance',
+      name: 'face_enhance',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Close`
+  String get close {
+    return Intl.message(
+      'Close',
+      name: 'close',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Source`
+  String get source {
+    return Intl.message(
+      'Source',
+      name: 'source',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Target`
+  String get target {
+    return Intl.message(
+      'Target',
+      name: 'target',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Result`
+  String get result {
+    return Intl.message(
+      'Result',
+      name: 'result',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Delete`
+  String get delete {
+    return Intl.message(
+      'Delete',
+      name: 'delete',
       desc: '',
       args: [],
     );

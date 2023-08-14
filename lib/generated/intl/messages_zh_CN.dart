@@ -27,10 +27,13 @@ class MessageLookup extends MessageLookupByLibrary {
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
         "add_folder": MessageLookupByLibrary.simpleMessage("添加文件夹"),
+        "close": MessageLookupByLibrary.simpleMessage("关闭"),
         "connection_failed_and_restart":
             MessageLookupByLibrary.simpleMessage("连接失败，重启服务中"),
+        "delete": MessageLookupByLibrary.simpleMessage("删除"),
         "detect_faces": MessageLookupByLibrary.simpleMessage("识别人脸"),
         "executing": MessageLookupByLibrary.simpleMessage("执行中"),
+        "face_enhance": MessageLookupByLibrary.simpleMessage("增强"),
         "file_filter_type_all": MessageLookupByLibrary.simpleMessage("全部"),
         "file_filter_type_gif_video":
             MessageLookupByLibrary.simpleMessage("GIF和视频"),
@@ -38,11 +41,14 @@ class MessageLookup extends MessageLookupByLibrary {
         "generate": MessageLookupByLibrary.simpleMessage("生成"),
         "generating": MessageLookupByLibrary.simpleMessage("生成中"),
         "log": MessageLookupByLibrary.simpleMessage("日志"),
-        "open_folder": MessageLookupByLibrary.simpleMessage("打开文件夹"),
         "parent_folder": MessageLookupByLibrary.simpleMessage("上层文件夹"),
         "refresh": MessageLookupByLibrary.simpleMessage("刷新"),
-        "show_in_file_explorer":
+        "result": MessageLookupByLibrary.simpleMessage("结果"),
+        "reveal_in_file_explorer":
             MessageLookupByLibrary.simpleMessage("在资源管理器中显示"),
+        "settings": MessageLookupByLibrary.simpleMessage("设置"),
+        "source": MessageLookupByLibrary.simpleMessage("源"),
+        "target": MessageLookupByLibrary.simpleMessage("目标"),
         "try_to_read_service_port_from_file": m0,
         "using_port_read_from_file": m1,
         "video": MessageLookupByLibrary.simpleMessage("视频")

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:crc32_checksum/crc32_checksum.dart';
+import 'package:flutter/widgets.dart';
 import 'package:path/path.dart' as pathlib;
 
 extension FileExt on File {
@@ -88,5 +89,20 @@ class Util {
   static Future<String> getFileCrc32(File file) async {
     var str = await file.readAsBytes();
     return Crc32.calculate(str).toString();
+  }
+
+  static Future<void> revealInExplorer(Directory dir,
+      [File? selectFile]) async {
+    try {
+      String? selectPath;
+      if (selectFile != null && selectFile.path.contains(dir.path)) {
+        selectPath = selectFile.path.replaceAll('/', '\\\\');
+      }
+      await Process.start("explorer.exe",
+          selectPath != null ? ["/select,", selectPath] : [dir.path],
+          runInShell: true);
+    } catch (err) {
+      debugPrint("$err");
+    }
   }
 }

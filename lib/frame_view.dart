@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
@@ -15,74 +17,98 @@ class FrameView extends StatefulWidget {
 }
 
 class _FrameViewState extends State<FrameView> {
+  late ThemeData theme;
   @override
   Widget build(BuildContext context) {
+    theme = Theme.of(context);
     return ValueListenableBuilder(
         valueListenable: widget.frameData,
         builder: (context, value, child) {
-          List<Widget>? overlays;
-          if (value == null) {
-            overlays = null;
-          } else {
-            overlays = [];
-            for (var t in value.rects) {
-              bool isSelected = t.selected;
-              overlays.add(Positioned(
-                left: t.rect.left,
-                top: t.rect.top,
-                width: t.rect.width,
-                height: t.rect.height,
-                child: Listener(
-                    onPointerDown: (event) {
-                      if (event.buttons == kPrimaryMouseButton) {
-                        if (!t.selected) {
-                          t.selected = true;
-                          setState(() {});
-                        }
-                      } else if (event.buttons == kSecondaryMouseButton) {
-                        if (t.selected) {
-                          t.selected = false;
-                          setState(() {});
-                        }
-                      }
-                    },
-                    child: GestureDetector(
-                        onDoubleTap: () {
-                          widget.onFaceDoubleTap(t);
-                        },
-                        child: Container(
-                          alignment: Alignment.topLeft,
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              width: isSelected ? 10 : 6,
-                              color: isSelected
-                                  ? Colors.blue.withOpacity(0.8)
-                                  : Colors.red.withOpacity(0.6),
-                            ),
-                          ),
-                          child: Container(
-                            alignment: Alignment.center,
-                            width: 50,
-                            height: 50,
-                            decoration: BoxDecoration(
-                              borderRadius: const BorderRadius.only(
-                                  bottomRight: Radius.circular(10)),
-                              color: Colors.blue.withOpacity(0.8),
-                            ),
-                            child: Text(
-                              "${t.index + 1}",
-                              style: const TextStyle(
-                                  fontSize: 30, color: Colors.white),
-                            ),
-                          ),
-                        ))),
-              ));
-            }
-          }
           return FilePreview(
             file: value?.fileForShow,
-            imgOverlays: overlays,
+            imgBuilder: (imgFile) {
+              if (value == null) {
+                return const SizedBox();
+              } else {
+                return LayoutBuilder(
+                  builder: (context, constraints) {
+                    List<Widget> overlays = [
+                      Image.file(
+                        imgFile,
+                      )
+                    ];
+                    if (value.width != null) {
+                      var scale = min(constraints.maxWidth / value.width!,
+                          constraints.maxHeight / value.height!);
+                      if (scale > 1) {
+                        scale = 1;
+                      }
+                      for (var t in value.rects) {
+                        overlays.add(Positioned(
+                          left: t.rect.left * scale,
+                          top: t.rect.top * scale,
+                          width: t.rect.width * scale,
+                          height: t.rect.height * scale,
+                          child: _buildFaceMarker(t),
+                        ));
+                      }
+                    }
+                    return Stack(
+                      children: overlays,
+                    );
+                  },
+                );
+              }
+            },
           );
         });
+  }
+
+  Widget _buildFaceMarker(RectData t) {
+    bool isSelected = t.selected;
+    return Listener(
+        onPointerDown: (event) {
+          if (event.buttons == kPrimaryMouseButton) {
+            if (!t.selected) {
+              t.selected = true;
+              setState(() {});
+            }
+          } else if (event.buttons == kSecondaryMouseButton) {
+            if (t.selected) {
+              t.selected = false;
+              setState(() {});
+            }
+          }
+        },
+        child: GestureDetector(
+            onDoubleTap: () {
+              widget.onFaceDoubleTap(t);
+            },
+            child: Container(
+              alignment: Alignment.topLeft,
+              decoration: BoxDecoration(
+                border: Border.all(
+                  width: isSelected ? 7 : 5,
+                  color: isSelected
+                      ? Colors.blue.withOpacity(0.8)
+                      : Colors.red.withOpacity(0.6),
+                ),
+              ),
+              child: FittedBox(
+                child: Container(
+                    alignment: Alignment.center,
+                    width: 30,
+                    height: 30,
+                    decoration: BoxDecoration(
+                      borderRadius: const BorderRadius.only(
+                          bottomRight: Radius.circular(10)),
+                      color: Colors.blue.withOpacity(0.5),
+                    ),
+                    child: Text(
+                      "${t.index + 1}",
+                      style: const TextStyle(fontSize: 13, color: Colors.white),
+                    )),
+              ),
+            )));
   }
 }

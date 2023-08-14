@@ -109,8 +109,6 @@ python -u server.py %1
 
 
 
-
-
 ### **Debuging Python scripts:**
 
 
@@ -122,3 +120,8 @@ python -u server.py %1
 
 
 #### 3. Run `E:\ff\fceswap\fceswap.exe`
+
+
+### **Others**
+
+#### Flutter SDK Version:3.10.4
