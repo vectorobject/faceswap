@@ -9,7 +9,7 @@
 
 #### 2. Allows swapping faces with specified faces
 
-![](https://github.com/vectorobject/faceswap/blob/main/readme_assets/main.png?raw=true)
+![](https://github.com/vectorobject/faceswap/blob/main/readme_assets/main2.png?raw=true)
 
 
 

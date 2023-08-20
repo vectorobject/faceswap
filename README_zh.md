@@ -10,7 +10,7 @@
 
 #### 2、支持换指定的脸
 
-![](https://github.com/vectorobject/faceswap/blob/main/readme_assets/main.png?raw=true)
+![](https://github.com/vectorobject/faceswap/blob/main/readme_assets/main2.png?raw=true)
 
 
 
