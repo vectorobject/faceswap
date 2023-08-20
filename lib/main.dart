@@ -1,6 +1,5 @@
-import 'dart:ui';
+import 'package:faceswap/settings.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
-import 'package:flutter_meedu_videoplayer/meedu_player.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'package:flutter/material.dart';
@@ -12,11 +11,9 @@ import 'generated/l10n.dart';
 import 'window_frame.dart';
 
 void main() async {
-  if (!(await Global.imagesPath.exists())) {
-    await Global.imagesPath.create();
-  }
   WidgetsFlutterBinding.ensureInitialized();
-  initMeeduPlayer();
+
+  await Global.init();
 
   await windowManager.ensureInitialized();
 
@@ -43,7 +40,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder(
-      valueListenable: Global.themeMode,
+      valueListenable: Settings.darkTheme,
       builder: (context, value, child) => MaterialApp(
         builder: (context, child) {
           return WindowFrame(child: child!);
@@ -78,7 +75,7 @@ class MyApp extends StatelessWidget {
         supportedLocales: S.delegate.supportedLocales,
         debugShowCheckedModeBanner: false,
         title: 'FaceSwap',
-        themeMode: Global.themeMode.value,
+        themeMode: Settings.darkTheme.value ? ThemeMode.dark : ThemeMode.light,
         theme: FlexThemeData.light(
           colors: const FlexSchemeColor(
             primary: Color(0xff00296b),

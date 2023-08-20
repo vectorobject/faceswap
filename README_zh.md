@@ -21,13 +21,21 @@
 
 #### 2、新建一个文件夹，例如：`E:\ff` （以下全部用此路径作为示例）
 
-#### 3、下载[faceswap release版](https://github.com/vectorobject/faceswap/releases)，并将其解压缩到文件夹： `E:\ff\faceswap`
+#### 3、下载[faceswap release版](https://github.com/vectorobject/faceswap/releases)，并将其解压缩到文件夹里： `E:\ff\`
 
-#### 4、将源码中的`server.py`复制到roop项目的根目录下
+##### 此时得到的目录结构如下：
 
-#### 5、将源码中的`runServer.bat`复制到`E:\ff\runServer.bat`
+```
+---E:\ff\
+------faceswap\
+---------faceswap.exe
+------runServer.bat
+------server.py
+```
 
-#### 6、请根据自己的环境修改`runServer.bat`
+#### 4、将`server.py`移动到roop项目的根目录下
+
+#### 5、请根据自己的环境修改`runServer.bat`
 
 ##### 例如我使用的是miniconda，安装路径是 `G:\miniconda3\`，那么内容如下：
 
@@ -39,11 +47,9 @@ pushd D:\roop\roop
 python -u server.py %1
 ```
 
-##### 上面的%1是本地服务的端口号
-
 ##### 如果你使用其他的方法也可以，只要能正常运行`server.py`就行
 
-#### 7.运行`E:\ff\faceswap\faceswap.exe`
+#### 6.运行`E:\ff\faceswap\faceswap.exe`
 
 ##### 如果正常，启动后会弹出一个命令窗口，如下所示：
 

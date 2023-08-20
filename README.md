@@ -27,24 +27,28 @@
 
 
 
-#### 3. Download the [faceswap release version](https://github.com/vectorobject/faceswap/releases) and extract it to the folder: `E:\ff\faceswap`
+#### 3. Download the [faceswap release version](https://github.com/vectorobject/faceswap/releases) and extract it to the folder: `E:\ff\`
+
+##### As follows：
+
+```
+---E:\ff\
+------faceswap\
+---------faceswap.exe
+------runServer.bat
+------server.py
+```
+
+
+#### 4. Move the `server.py` to the root directory of the roop project
 
 
 
-#### 4. Copy the `server.py` from the source code to the root directory of the roop project
-
-
-
-#### 5. Copy the `runServer.bat` from the source code to `E:\ff\runServer.bat`
-
-
-
-#### 6. Modify the `runServer.bat` according to your environment
+#### 5. Modify the `runServer.bat` according to your environment
 
 
 
 ##### For example, if you are using minoconda installed at `G:\minoconda3\` , the content should be as follows:
-
 
 
 ```bat
@@ -56,13 +60,11 @@ python -u server.py %1
 ```
 
 
-##### The %1 represents the local server port number.
-
 ##### You can use other methods as well as long as server.py runs correctly.
 
 
 
-#### 7. Run `E:\ff\fceswap\fceswap.exe`
+#### 6. Run `E:\ff\fceswap\fceswap.exe`
 
 
 

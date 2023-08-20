@@ -3,11 +3,14 @@ import 'dart:ui';
 
 import 'package:faceswap/face_swap_list.dart';
 import 'package:faceswap/my_divider_painter.dart';
+import 'package:faceswap/options.dart';
+import 'package:faceswap/options_menu_button.dart';
 import 'package:faceswap/util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_meedu_videoplayer/meedu_player.dart';
 import 'package:multi_split_view/multi_split_view.dart';
 import 'package:path/path.dart' as path;
+import 'package:window_manager/window_manager.dart';
 
 import 'data.dart';
 import 'file_preview.dart';
@@ -29,7 +32,8 @@ class HomeView extends StatefulWidget {
   State<HomeView> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<HomeView> with TickerProviderStateMixin {
+class _MyHomePageState extends State<HomeView>
+    with TickerProviderStateMixin, WindowListener {
   ValueNotifier<File?> sourceImg = ValueNotifier(null);
   ValueNotifier<File?> targetImg = ValueNotifier(null);
   ValueNotifier<File?> resultImg = ValueNotifier(null);
@@ -47,7 +51,6 @@ class _MyHomePageState extends State<HomeView> with TickerProviderStateMixin {
   @override
   void initState() {
     Server.init();
-
     targetGifController = GifController();
     targetVideoController =
         MeeduPlayerController(controlsStyle: ControlsStyle.primary);
@@ -61,12 +64,29 @@ class _MyHomePageState extends State<HomeView> with TickerProviderStateMixin {
       swapData.clearTargets();
     });
     super.initState();
+    windowManager.addListener(this);
+  }
+
+  @override
+  void dispose() {
+    windowManager.removeListener(this);
+    super.dispose();
+  }
+
+  @override
+  void onWindowClose() {
+    exit(0);
+  }
+
+  @override
+  void onWindowFocus() {
+    setState(() {});
   }
 
   Future<File?> run() async {
-    var targetFile = swapData.target.value.first.parent.file;
-    var isImg = targetFile.isImg;
-    var isGif = targetFile.isGif;
+    final targetFile = swapData.target.value.first.parent.file;
+    final isImg = targetFile.isImg;
+    final isGif = targetFile.isGif;
     String outputExt;
     if (isGif) {
       outputExt = "gif";
@@ -74,8 +94,8 @@ class _MyHomePageState extends State<HomeView> with TickerProviderStateMixin {
       outputExt = isImg ? 'jpg' : 'mp4';
     }
 
-    var basePath = path.join(
-        Global.resultDir.path, DateFormat('yMd_hms').format(DateTime.now()));
+    var basePath = path.join(Global.resultDir.path,
+        DateFormat('yyMMdd_HHmmss').format(DateTime.now()));
     var resultPath = "$basePath.$outputExt";
     int count = 1;
     while (true) {
@@ -86,6 +106,7 @@ class _MyHomePageState extends State<HomeView> with TickerProviderStateMixin {
       }
     }
     try {
+      await Server.setArgs();
       List<dynamic> sourceFaceInfos = [];
       for (var t in swapData.source.value) {
         sourceFaceInfos
@@ -108,7 +129,7 @@ class _MyHomePageState extends State<HomeView> with TickerProviderStateMixin {
           });
         }
         await Server.swapVideo(sourceFaceInfos, targetFaceInfos,
-            targetFile.path, resultPath, false, 0.3);
+            targetFile.path, resultPath, Options.minSimilarity.value / 100);
       }
       print("Finished");
       await Future.delayed(const Duration(milliseconds: 1000));
@@ -120,7 +141,7 @@ class _MyHomePageState extends State<HomeView> with TickerProviderStateMixin {
         print("Fail");
       }
     } catch (err) {
-      print(err);
+      StatusBar.appendOutput("$err", true);
     }
     return null;
   }
@@ -426,6 +447,7 @@ class _MyHomePageState extends State<HomeView> with TickerProviderStateMixin {
       Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
+          const OptionsMenuButton(),
           const Spacer(),
           FilledButton.icon(
             onPressed: isRunning

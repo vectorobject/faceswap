@@ -279,6 +279,136 @@ class S {
       args: [],
     );
   }
+
+  /// `Options`
+  String get options {
+    return Intl.message(
+      'Options',
+      name: 'options',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Keep FPS`
+  String get keep_fps {
+    return Intl.message(
+      'Keep FPS',
+      name: 'keep_fps',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Audio`
+  String get audio {
+    return Intl.message(
+      'Audio',
+      name: 'audio',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Keep frames folder`
+  String get keep_frames {
+    return Intl.message(
+      'Keep frames folder',
+      name: 'keep_frames',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Video facial minimum similarity:`
+  String get min_similarity {
+    return Intl.message(
+      'Video facial minimum similarity:',
+      name: 'min_similarity',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Video Encoder:`
+  String get output_video_encoder {
+    return Intl.message(
+      'Video Encoder:',
+      name: 'output_video_encoder',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Video Quality:`
+  String get output_video_quality {
+    return Intl.message(
+      'Video Quality:',
+      name: 'output_video_quality',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Frame Format:`
+  String get temp_frame_format {
+    return Intl.message(
+      'Frame Format:',
+      name: 'temp_frame_format',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Frame Quality:`
+  String get temp_frame_quality {
+    return Intl.message(
+      'Frame Quality:',
+      name: 'temp_frame_quality',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Set as Default`
+  String get set_as_default {
+    return Intl.message(
+      'Set as Default',
+      name: 'set_as_default',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Drag the labels to adjust the order, with higher priority as they move to the left.`
+  String get provider_desc {
+    return Intl.message(
+      'Drag the labels to adjust the order, with higher priority as they move to the left.',
+      name: 'provider_desc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Execution Providers:`
+  String get execution_providers {
+    return Intl.message(
+      'Execution Providers:',
+      name: 'execution_providers',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Execution Threads:`
+  String get execution_threads {
+    return Intl.message(
+      'Execution Threads:',
+      name: 'execution_threads',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

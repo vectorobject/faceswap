@@ -159,7 +159,8 @@ class FileSelectViewState extends State<FileSelectView> {
                       i++;
                     }
                     try {
-                      await Process.start('mklink', ["/D", target, source]);
+                      await Process.start('mklink', ["/D", target, source],
+                          runInShell: true);
                       debugPrint("Finished");
                     } catch (err) {
                       debugPrint("Err:$err");

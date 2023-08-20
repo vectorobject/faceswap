@@ -3,11 +3,14 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:faceswap/settings.dart';
 import 'package:faceswap/status_bar.dart';
 import 'package:flutter/widgets.dart';
 import 'package:path/path.dart' as path;
 
 import 'generated/l10n.dart';
+import 'options.dart';
+import 'options_menu_button.dart';
 
 class Server {
   static final ValueNotifier<Uri?> _baseUrl = ValueNotifier(null);
@@ -209,10 +212,9 @@ class Server {
       List<dynamic> targetFaceInfos,
       String targetPath,
       String outputPath,
-      bool keepFPS,
       double minSimilarity) async {
     await _callFunc(
-        'swap_video(${_py(sourceFaceInfos)},${_py(targetFaceInfos)},${_py(targetPath)},${_py(outputPath)},${_py(keepFPS)},${_py(minSimilarity)})');
+        'swap_video(${_py(sourceFaceInfos)},${_py(targetFaceInfos)},${_py(targetPath)},${_py(outputPath)},${_py(minSimilarity)})');
   }
 
   static Future<void> swapImage(
@@ -224,6 +226,21 @@ class Server {
         'swap_image(${_py(sourceFaceInfos)},${_py(targetFaceInfos)},${_py(targetPath)},${_py(outputPath)})');
   }
 
+  static Future<void> setArgs() async {
+    List args = [
+      Settings.executionProvider.getSelectedNames(),
+      Settings.executionThreads.value,
+      Options.keepFPS.value,
+      Options.keepFrames.value,
+      !Options.audio.value,
+      Options.tempFrameFormat.value.toLowerCase(),
+      Options.tempFrameQuality.value,
+      Options.outputVideoEncoder.value,
+      Options.outputVideoQuality.value
+    ];
+    await _callFunc('set_args(${args.map((e) => _py(e)).join(",")})');
+  }
+
   static Future<dynamic> getFaces(String path) async {
     return _callFunc('get_faces(r"$path")');
   }
@@ -233,5 +250,14 @@ class Server {
     var r = await _callFunc(
         'video_screenshot(${_py(duration.toString())},${_py(input)},${_py(output)})');
     return r == "succ";
+  }
+
+  static Future<List<String>> getAvailableProviders() async {
+    var r = await _callFunc('get_available_providers()');
+    List<String> t = [];
+    for (var i in r) {
+      t.add(i.toString());
+    }
+    return t;
   }
 }
