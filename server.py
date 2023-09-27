@@ -148,6 +148,8 @@ def process_one_frame(source_face_infos,target_face_infos,frame,min_similarity):
                 face=get_most_similar_face(frame_faces,target_face_infos[i]["face"],min_similarity)
                 if face:
                     result = ser.get(result, face, source_face_infos[i]["face"], paste_back=True)
+                    if target_face_infos[i]["enhance"]==True:
+                        result=face_enhance(face,result)
         if len(target_face_infos)>min_len:
             for i in range(min_len,len(target_face_infos)):
                 info=target_face_infos[i]
